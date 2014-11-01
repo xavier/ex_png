@@ -4,6 +4,10 @@ defmodule ExPNG.Image do
 
   defstruct width: 0, height: 0, pixels: <<>>
 
+  def new(width, height) do
+    new(width, height, ExPNG.Color.transparent)
+  end
+
   def new(width, height, background_color) do
     %Image{width: width, height: height, pixels: String.duplicate(background_color, width*height)}
   end
@@ -22,6 +26,29 @@ defmodule ExPNG.Image do
   defp strip_scan_line_filter_byte(image_data, scan_line_width, output) do
     <<_, scan_line::binary-size(scan_line_width), next_scan_lines::binary>> = image_data
     strip_scan_line_filter_byte(next_scan_lines, scan_line_width, output <> scan_line)
+  end
+
+  defp add_scan_line_filter_byte(<<>>, _, output), do: output
+  defp add_scan_line_filter_byte(image_data, scan_line_width, output) do
+    <<scan_line::binary-size(scan_line_width), next_scan_lines::binary>> = image_data
+    add_scan_line_filter_byte(next_scan_lines, scan_line_width, output <> <<0>> <> scan_line)
+  end
+
+  # This will probably have to change but let's keep it simple for now
+  def to_chunks(image) do
+    {to_header_chunk(image), add_scan_line_filter_byte(image.pixels, image.width * 4, <<>>)}
+  end
+
+  def to_header_chunk(image) do
+    %ExPNG.Chunks.Header{
+      width: image.width,
+      height: image.height,
+      bit_depth: 8,
+      color_type: 6,
+      compression_method: 0,
+      interlace_method: 0,
+      filter_method: 0,
+    }
   end
 
   def size(%Image{width: w, height: h} = image) do

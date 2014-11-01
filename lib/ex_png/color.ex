@@ -12,6 +12,18 @@ defmodule ExPNG.Color do
     grayscale(255, opacity)
   end
 
+  def red(opacity \\ 255) do
+    rgba(255, 0, 0, opacity)
+  end
+
+  def green(opacity \\ 255) do
+    rgba(0, 255, 0, opacity)
+  end
+
+  def blue(opacity \\ 255) do
+    rgba(0, 0, 255, opacity)
+  end
+
   def grayscale(tint, a \\ 255) do
     rgba(tint, tint, tint, a)
   end
