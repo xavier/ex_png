@@ -15,7 +15,7 @@ defmodule ExPNG.Image do
     %Image{width: header.width, height: header.height, pixels: image_data}
   end
 
-  defp ensure_features_supported(%ExPNG.Chunks.IHDR{bit_depth: 8, color_type: 6, compression_method: 0, interlace_method: 0}), do: :ok
+  defp ensure_features_supported(%ExPNG.Chunks.Header{bit_depth: 8, color_type: 6, compression_method: 0, interlace_method: 0}), do: :ok
   defp ensure_features_supported(_), do: nil
 
   defp strip_scan_line_filter_byte(<<>>, _, output), do: output

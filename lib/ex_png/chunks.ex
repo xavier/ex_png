@@ -63,7 +63,7 @@ defmodule ExPNG.Chunks do
     :erlang.crc32(:erlang.crc32(type), data)
   end
 
-  defmodule IHDR do
+  defmodule Header do
     defstruct width: nil, height: nil, bit_depth: nil, color_type: nil, compression_method: nil, filter_method: nil, interlace_method: nil
   end
 
@@ -77,7 +77,7 @@ defmodule ExPNG.Chunks do
       filter_method::size(8),
       interlace_method::size(8),
     >> = data
-    payload = %IHDR{
+    payload = %Header{
       width: width,
       height: height,
       bit_depth: bit_depth,
