@@ -44,14 +44,13 @@ defmodule ExPNG.Chunks do
   defp verify_signature(<<137, 80, 78, 71, 13, 10, 26, 10, stream::binary>>), do: {:ok, stream}
   defp verify_signature(stream), do: {:error, stream}
 
+  defp decode_chunks(<<>>, chunks), do: Enum.reverse(chunks)
   defp decode_chunks(<<length::size(32), type::binary-size(4), stream::binary>>, chunks) do
     <<payload::binary-size(length), crc::size(32), stream::binary>> = stream
     chunk = %Chunk{type: type, length: length, data: payload, crc: crc}
     :ok = crc_check(chunk)
     decode_chunks(stream, [decode_chunk(chunk)|chunks])
   end
-
-  defp decode_chunks("", chunks), do: Enum.reverse(chunks)
 
   defp crc_check(%Chunk{crc: crc} = chunk) do
     case chunk_crc(chunk) do
