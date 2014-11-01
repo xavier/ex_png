@@ -2,9 +2,7 @@
 
 A pure Elixir libary to decode and encode PNG images.
 
-## Limitations
-
-At this point, only true color, 8 bits per channel, non-interlaced images are supported.
+## Usage
 
 ```elixir
 require ExPNG.Image, as: Image
@@ -23,6 +21,10 @@ ExPNG.image(200, 300)
 |> Image.put_pixel(10, 10, Color.grayscale(133))
 |> ExPNG.write("/tmp/test.png")
 ```
+
+## Current Limitations
+
+At this point, only true color, 8 bits per channel, non-interlaced images are supported.
 
 ## To Do
 
