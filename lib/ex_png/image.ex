@@ -1,18 +1,18 @@
 defmodule ExPNG.Image do
 
-  defmodule Bitmap do
-    defstruct width: 0, height: 0, pixels: <<>>
-  end
+  alias __MODULE__, as: Image
+
+  defstruct width: 0, height: 0, pixels: <<>>
 
   def new(width, height, background_color) do
-    %Bitmap{width: width, height: height, pixels: String.duplicate(background_color, width*height)}
+    %Image{width: width, height: height, pixels: String.duplicate(background_color, width*height)}
   end
 
   def from_chunks(chunks) do
     header = ExPNG.Chunks.header(chunks)
     :ok = ensure_features_supported(header)
     image_data = strip_scan_line_filter_byte(ExPNG.Chunks.image_data(chunks), header.width * 4, <<>>)
-    %Bitmap{width: header.width, height: header.height, pixels: image_data}
+    %Image{width: header.width, height: header.height, pixels: image_data}
   end
 
   defp ensure_features_supported(%ExPNG.Chunks.IHDR{bit_depth: 8, color_type: 6, compression_method: 0, interlace_method: 0}), do: :ok
@@ -24,7 +24,7 @@ defmodule ExPNG.Image do
     strip_scan_line_filter_byte(next_scan_lines, scan_line_width, output <> scan_line)
   end
 
-  def size(%Bitmap{width: w, height: h} = image) do
+  def size(%Image{width: w, height: h} = image) do
     {w, h}
   end
 
@@ -32,7 +32,7 @@ defmodule ExPNG.Image do
   def put_pixel(image, x, y, color) do
     offset = pixel_offset(image, x, y)
     <<before::binary-size(offset), _::binary-size(4), rest::binary>>= image.pixels
-    %Bitmap{image | pixels: (before <> color <> rest)}
+    %Image{image | pixels: (before <> color <> rest)}
   end
 
   def get_pixel(image, x, y) do
