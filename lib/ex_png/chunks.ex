@@ -34,6 +34,10 @@ defmodule ExPNG.Chunks do
     defstruct width: nil, height: nil, bit_depth: nil, color_type: nil, compression_method: nil, filter_method: nil, interlace_method: nil
   end
 
+  #
+  # Public API
+  #
+
   @doc "Decodes a binary stream into a list of chunks"
   def decode(stream) do
     {:ok, stream} = verify_signature(stream)
@@ -55,16 +59,9 @@ defmodule ExPNG.Chunks do
     combine_image_data(chunks)
   end
 
-  @doc "Slices image data larger that the maximum chunk size"
-  defp slice_image_data(image_data), do: _slice_image_data(image_data, [])
-  defp _slice_image_data(<<chunk_data::binary-size(@maximum_chunk_size), image_data::binary>>, chunks), do: _slice_image_data(image_data, [chunk_data|chunks])
-  defp _slice_image_data(<<image_data::binary>>, chunks), do: Enum.reverse([image_data|chunks])
-
-  @doc "Combines multiple image data chunk payloads into a single binary"
-  defp combine_image_data(chunks), do: _combine_image_data(chunks, <<>>)
-  defp _combine_image_data([%Chunk{type: "IDAT", payload: payload}|chunks], binary), do: _combine_image_data(chunks, binary <> payload)
-  defp _combine_image_data([_|chunks], binary), do: _combine_image_data(chunks, binary)
-  defp _combine_image_data([], binary), do: binary
+  #
+  # Decoder
+  #
 
   defp verify_signature(<<137, 80, 78, 71, 13, 10, 26, 10, stream::binary>>), do: {:ok, stream}
   defp verify_signature(stream), do: {:error, stream}
@@ -76,6 +73,12 @@ defmodule ExPNG.Chunks do
     end
   end
 
+  @doc "Combines multiple image data chunk payloads into a single binary"
+  defp combine_image_data(chunks), do: _combine_image_data(chunks, <<>>)
+  defp _combine_image_data([%Chunk{type: "IDAT", payload: payload}|chunks], binary), do: _combine_image_data(chunks, binary <> payload)
+  defp _combine_image_data([_|chunks], binary), do: _combine_image_data(chunks, binary)
+  defp _combine_image_data([], binary), do: binary
+
   defp decode_chunks(stream), do: _decode_chunks(stream, [])
   defp _decode_chunks(<<>>, chunks), do: Enum.reverse(chunks)
   defp _decode_chunks(<<length::size(32), type::binary-size(4), stream::binary>>, chunks) do
@@ -84,37 +87,6 @@ defmodule ExPNG.Chunks do
     :ok = crc_check(chunk)
     _decode_chunks(stream, [decode_chunk(chunk)|chunks])
   end
-
-  defp encode_chunks([], stream), do: stream <> wrap_chunk(encode_chunk_payload(:end))
-  defp encode_chunks([payload|payloads], stream), do: encode_chunks(payloads, stream <> wrap_chunk(encode_chunk_payload(payload)))
-
-  def wrap_chunk({type, data}) do
-    <<
-      byte_size(data) :: unsigned-32,
-      type :: binary-size(4),
-      data :: binary,
-      crc32(type, data) :: unsigned-32
-    >>
-  end
-
-  defp encode_chunk_payload(%Header{width: _} = header) do
-    payload = <<
-      header.width :: unsigned-32,
-      header.height :: unsigned-32,
-      header.bit_depth :: unsigned-8,
-      header.color_type :: unsigned-8,
-      header.compression_method :: unsigned-8,
-      header.filter_method :: unsigned-8,
-      header.interlace_method :: unsigned-8
-    >>
-    {"IHDR", payload}
-  end
-
-  defp encode_chunk_payload(<<image_data :: binary>>) do
-    {"IDAT", deflate(image_data)}
-  end
-
-  defp encode_chunk_payload(:end), do: {"IEND", <<>>}
 
   def decode_chunk(%Chunk{type: "IHDR", data: data} = chunk) do
     <<
@@ -147,6 +119,47 @@ defmodule ExPNG.Chunks do
   end
 
   def decode_chunk(chunk), do: %Chunk{chunk | payload: :unsupported}
+
+  #
+  # Encoder
+  #
+
+  @doc "Slices image data larger that the maximum chunk size"
+  defp slice_image_data(image_data), do: _slice_image_data(image_data, [])
+  defp _slice_image_data(<<chunk_data::binary-size(@maximum_chunk_size), image_data::binary>>, chunks), do: _slice_image_data(image_data, [chunk_data|chunks])
+  defp _slice_image_data(<<image_data::binary>>, chunks), do: Enum.reverse([image_data|chunks])
+
+  defp encode_chunks([], stream), do: stream <> wrap_chunk(encode_chunk_payload(:end))
+  defp encode_chunks([payload|payloads], stream), do: encode_chunks(payloads, stream <> wrap_chunk(encode_chunk_payload(payload)))
+
+  def wrap_chunk({type, data}) do
+    <<
+      byte_size(data) :: unsigned-32,
+      type :: binary-size(4),
+      data :: binary,
+      crc32(type, data) :: unsigned-32
+    >>
+  end
+
+  defp encode_chunk_payload(%Header{width: _} = header) do
+    payload = <<
+      header.width :: unsigned-32,
+      header.height :: unsigned-32,
+      header.bit_depth :: unsigned-8,
+      header.color_type :: unsigned-8,
+      header.compression_method :: unsigned-8,
+      header.filter_method :: unsigned-8,
+      header.interlace_method :: unsigned-8
+    >>
+    {"IHDR", payload}
+  end
+
+  defp encode_chunk_payload(<<image_data :: binary>>) do
+    {"IDAT", deflate(image_data)}
+  end
+
+  defp encode_chunk_payload(:end), do: {"IEND", <<>>}
+
 
   #
   # Utility functions
