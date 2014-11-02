@@ -16,6 +16,9 @@ defmodule ExPNG.Color do
     rgba(tint, tint, tint, a)
   end
 
+  def to_grayscale(<<r, g, b, a>>), do: to_grayscale(r, g, b, a)
+  def to_grayscale(r, g, b, a),     do: grayscale(round(r * 0.3 + g * 0.59 + b * 0.11), a)
+
   def rgb(r, g, b) do
     rgba(r, g, b, 255)
   end
