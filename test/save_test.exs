@@ -73,7 +73,7 @@ defmodule ExPNG.SaveTest do
     assert Color.black == Image.get_pixel(png, 0, 7)
   end
 
-  test "save a complex true color images" do
+  test "generates and saves a complex true color image" do
     width = 640
     height = 480
     path = StagingArea.path("mandelbrot.png")
