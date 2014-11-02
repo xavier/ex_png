@@ -16,9 +16,9 @@ IO.inspect Image.size(png.size)
 
 # Draw some pixels on a transparent canvas and write PNG
 ExPNG.image(200, 300)
-|> Image.put_pixel(20, 30, Color.rgba(12, 34, 56, 128))
-|> Image.put_pixel(50, 50, Color.hex("FF003C"))
-|> Image.put_pixel(10, 10, Color.grayscale(133))
+|> Image.set_pixel(20, 30, Color.rgba(12, 34, 56, 128))
+|> Image.set_pixel(50, 50, Color.hex("FF003C"))
+|> Image.set_pixel(10, 10, Color.grayscale(133))
 |> ExPNG.write("/tmp/test.png")
 ```
 

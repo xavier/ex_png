@@ -11,10 +11,10 @@ defmodule ExPNG.SaveTest do
 
   def create_test_pattern(width, height) do
     ExPNG.image(width, height, Color.transparent)
-    |> Image.put_pixel(0, 0, @test_pattern_top_left)
-    |> Image.put_pixel(width-1, 0, @test_pattern_top_right)
-    |> Image.put_pixel(width-1, height-1, @test_pattern_bottom_right)
-    |> Image.put_pixel(0, height-1, @test_pattern_bottom_left)
+    |> Image.set_pixel(0, 0, @test_pattern_top_left)
+    |> Image.set_pixel(width-1, 0, @test_pattern_top_right)
+    |> Image.set_pixel(width-1, height-1, @test_pattern_bottom_right)
+    |> Image.set_pixel(0, height-1, @test_pattern_bottom_left)
   end
 
   defmodule Mandelbrot do

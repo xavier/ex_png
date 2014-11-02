@@ -10,9 +10,9 @@ defmodule ExPNG.ImageTest do
     assert <<0,0,0,0,0,0,0,0>> == png.pixels
   end
 
-  test "put_pixel" do
+  test "set_pixel" do
     png = Image.new(1, 2, Color.transparent)
-    png = Image.put_pixel(png, 1, 0, Color.white)
+    png = Image.set_pixel(png, 1, 0, Color.white)
     assert <<0,0,0,0,255,255,255,255>> == png.pixels
   end
 

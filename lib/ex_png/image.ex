@@ -56,7 +56,7 @@ defmodule ExPNG.Image do
   end
 
   # FIXME this is probably incredibly inefficient
-  def put_pixel(image, x, y, color) do
+  def set_pixel(image, x, y, color) do
     offset = pixel_offset(image, x, y)
     <<before::binary-size(offset), _::binary-size(4), rest::binary>> = image.pixels
     %Image{image | pixels: (before <> color <> rest)}
