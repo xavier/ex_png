@@ -38,4 +38,12 @@ defmodule ExPNG.ColorTest do
     assert <<0x1a, 0xb2, 0x3c, 255>> == Color.hex("#1ab23c")
   end
 
+  test "RGBA accessors" do
+    rgba = Color.rgba(1, 2, 3, 4)
+    assert 1 = Color.red(rgba)
+    assert 2 = Color.green(rgba)
+    assert 3 = Color.blue(rgba)
+    assert 4 = Color.alpha(rgba)
+  end
+
 end

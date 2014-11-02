@@ -12,18 +12,6 @@ defmodule ExPNG.Color do
     grayscale(255, opacity)
   end
 
-  def red(opacity \\ 255) do
-    rgba(255, 0, 0, opacity)
-  end
-
-  def green(opacity \\ 255) do
-    rgba(0, 255, 0, opacity)
-  end
-
-  def blue(opacity \\ 255) do
-    rgba(0, 0, 255, opacity)
-  end
-
   def grayscale(tint, a \\ 255) do
     rgba(tint, tint, tint, a)
   end
@@ -35,6 +23,11 @@ defmodule ExPNG.Color do
   def rgba(r, g, b, a) do
     <<r, g, b, a>>
   end
+
+  def red(<<r, _, _, _>>),   do: r
+  def green(<<_, g, _, _>>), do: g
+  def blue(<<_, _, b, _>>),  do: b
+  def alpha(<<_, _, _, a>>), do: a
 
   @hex_rgb    ~r/\A\#?(?<r>[\da-f])(?<g>[\da-f])(?<b>[\da-f])\Z/i
   @hex_rrggbb ~r/\A\#?(?<r>[\da-f]{2})(?<g>[\da-f]{2})(?<b>[\da-f]{2})\Z/i

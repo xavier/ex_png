@@ -4,12 +4,17 @@ defmodule ExPNG.SaveTest do
   alias ExPNG.Color, as: Color
   alias ExPNG.Image, as: Image
 
-  def create_test_image(width, height) do
+  @test_pattern_top_left     Color.rgb(255, 0, 0)
+  @test_pattern_top_right    Color.rgb(0, 255, 0)
+  @test_pattern_bottom_left  Color.rgb(0, 0, 255)
+  @test_pattern_bottom_right Color.rgb(0, 0, 0)
+
+  def create_test_pattern(width, height) do
     ExPNG.image(width, height, Color.transparent)
-    |> Image.put_pixel(0, 0, Color.red)
-    |> Image.put_pixel(width-1, 0, Color.green)
-    |> Image.put_pixel(width-1, height-1, Color.blue)
-    |> Image.put_pixel(0, height-1, Color.black)
+    |> Image.put_pixel(0, 0, @test_pattern_top_left)
+    |> Image.put_pixel(width-1, 0, @test_pattern_top_right)
+    |> Image.put_pixel(width-1, height-1, @test_pattern_bottom_right)
+    |> Image.put_pixel(0, height-1, @test_pattern_bottom_left)
   end
 
   defmodule Mandelbrot do
@@ -63,14 +68,14 @@ defmodule ExPNG.SaveTest do
   end
 
   test "encodes a simple true color image with a test pattern" do
-    test_image = create_test_image(8, 8)
-    encoded = ExPNG.encode(test_image)
+    test_pattern = create_test_pattern(8, 8)
+    encoded = ExPNG.encode(test_pattern)
     png = ExPNG.decode(encoded)
     assert {8, 8} == Image.size(png)
-    assert Color.red == Image.get_pixel(png, 0, 0)
-    assert Color.green == Image.get_pixel(png, 7, 0)
-    assert Color.blue == Image.get_pixel(png, 7, 7)
-    assert Color.black == Image.get_pixel(png, 0, 7)
+    assert @test_pattern_top_left == Image.get_pixel(png, 0, 0)
+    assert @test_pattern_top_right == Image.get_pixel(png, 7, 0)
+    assert @test_pattern_bottom_right == Image.get_pixel(png, 7, 7)
+    assert @test_pattern_bottom_left == Image.get_pixel(png, 0, 7)
   end
 
   test "generates and saves a complex true color image" do
