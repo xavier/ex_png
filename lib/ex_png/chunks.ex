@@ -52,7 +52,7 @@ defmodule ExPNG.Chunks do
 
   @doc "Returns the complete image data for the given chunk list"
   def image_data(chunks) do
-    combine_image_data(chunks, <<>>)
+    combine_image_data(chunks)
   end
 
   @doc "Slices image data larger that the maximum chunk size"
@@ -61,9 +61,10 @@ defmodule ExPNG.Chunks do
   defp _slice_image_data(<<image_data::binary>>, chunks), do: Enum.reverse([image_data|chunks])
 
   @doc "Combines multiple image data chunk payloads into a single binary"
-  defp combine_image_data([%Chunk{type: "IDAT", payload: payload}|chunks], binary), do: combine_image_data(chunks, binary <> payload)
-  defp combine_image_data([_|chunks], binary), do: combine_image_data(chunks, binary)
-  defp combine_image_data([], binary), do: binary
+  defp combine_image_data(chunks), do: _combine_image_data(chunks, <<>>)
+  defp _combine_image_data([%Chunk{type: "IDAT", payload: payload}|chunks], binary), do: _combine_image_data(chunks, binary <> payload)
+  defp _combine_image_data([_|chunks], binary), do: _combine_image_data(chunks, binary)
+  defp _combine_image_data([], binary), do: binary
 
   defp verify_signature(<<137, 80, 78, 71, 13, 10, 26, 10, stream::binary>>), do: {:ok, stream}
   defp verify_signature(stream), do: {:error, stream}
