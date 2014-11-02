@@ -37,7 +37,7 @@ defmodule ExPNG.Chunks do
   @doc "Decodes a binary stream into a list of chunks"
   def decode(stream) do
     {:ok, stream} = verify_signature(stream)
-    decode_chunks(stream, [])
+    decode_chunks(stream)
   end
 
   @doc "Encodes the given Header chunk payload and pixel data into a PNG bitstream"
@@ -75,12 +75,13 @@ defmodule ExPNG.Chunks do
     end
   end
 
-  defp decode_chunks(<<>>, chunks), do: Enum.reverse(chunks)
-  defp decode_chunks(<<length::size(32), type::binary-size(4), stream::binary>>, chunks) do
+  defp decode_chunks(stream), do: _decode_chunks(stream, [])
+  defp _decode_chunks(<<>>, chunks), do: Enum.reverse(chunks)
+  defp _decode_chunks(<<length::size(32), type::binary-size(4), stream::binary>>, chunks) do
     <<payload::binary-size(length), crc::size(32), stream::binary>> = stream
     chunk = %Chunk{type: type, length: length, data: payload, crc: crc}
     :ok = crc_check(chunk)
-    decode_chunks(stream, [decode_chunk(chunk)|chunks])
+    _decode_chunks(stream, [decode_chunk(chunk)|chunks])
   end
 
   defp encode_chunks([], stream), do: stream <> wrap_chunk(encode_chunk_payload(:end))
