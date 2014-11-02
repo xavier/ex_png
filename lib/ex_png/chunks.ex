@@ -81,8 +81,8 @@ defmodule ExPNG.Chunks do
 
   defp decode_chunks(stream), do: _decode_chunks(stream, [])
   defp _decode_chunks(<<>>, chunks), do: Enum.reverse(chunks)
-  defp _decode_chunks(<<length::size(32), type::binary-size(4), stream::binary>>, chunks) do
-    <<payload::binary-size(length), crc::size(32), stream::binary>> = stream
+  defp _decode_chunks(<<length::unsigned-32, type::binary-size(4), stream::binary>>, chunks) do
+    <<payload::binary-size(length), crc::unsigned-32, stream::binary>> = stream
     chunk = %Chunk{type: type, length: length, data: payload, crc: crc}
     :ok = crc_check(chunk)
     _decode_chunks(stream, [decode_chunk(chunk)|chunks])
@@ -90,13 +90,13 @@ defmodule ExPNG.Chunks do
 
   def decode_chunk(%Chunk{type: "IHDR", data: data} = chunk) do
     <<
-      width::size(32),
-      height::size(32),
-      bit_depth::size(8),
-      color_type::size(8),
-      compression_method::size(8),
-      filter_method::size(8),
-      interlace_method::size(8),
+      width::unsigned-32,
+      height::unsigned-32,
+      bit_depth::unsigned-8,
+      color_type::unsigned-8,
+      compression_method::unsigned-8,
+      filter_method::unsigned-8,
+      interlace_method::unsigned-8,
     >> = data
     payload = %Header{
       width: width,
