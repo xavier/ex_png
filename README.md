@@ -31,7 +31,10 @@ At this point, only true color, 8 bits per channel, non-interlaced images are su
 - [x] Load TrueColor 8-bit per channel, non-interlaced PNG image data
 - [x] Trivial image manipulation primitives
 - [x] Support encoding
+- [ ] Refactoring (extract some functions in submodules, ...)
+- [ ] API revision (tension between ExPNG.fun and Image.fun...)
 - [ ] Improve documentation
+- [ ] Hex package
 - [ ] Support Adam7 interlacing
 - [ ] Support more color types
 - [ ] Image manipulation and compositing functions
