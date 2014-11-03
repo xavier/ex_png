@@ -46,6 +46,10 @@ defmodule ExPNG.Chunks do
     defstruct rendering_intent: nil
   end
 
+  defmodule PhysicalPixelDimensions do
+    defstruct x: nil, y: nil, unit: nil
+  end
+
   #
   # Public API
   #
@@ -191,6 +195,15 @@ defmodule ExPNG.Chunks do
       true -> :unknown_rendering_intent
     end
     %Chunk{chunk | payload: %StandardRGB{rendering_intent: rendering_intent}}
+  end
+
+  defp decode_chunk(%Chunk{type: "pHYs"} = chunk, data, _) do
+    <<x :: unsigned-32, y :: unsigned-32, unit_specifier :: unsigned-8>> = data
+    unit = case unit_specifier do
+      1    -> :m
+      true -> :unsupported_unit
+    end
+    %Chunk{chunk | payload: %PhysicalPixelDimensions{x: x, y: y, unit: unit}}
   end
 
   defp decode_chunk(chunk, _, _), do: %Chunk{chunk | payload: :unsupported}

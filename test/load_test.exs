@@ -63,4 +63,13 @@ defmodule ExPNG.LoadTest do
     assert :perceptual == srgb.payload.rendering_intent
   end
 
+  test "loads pHYs chunks" do
+    stream = File.read!(Fixtures.path("test_8x8.png"))
+    chunks = ExPNG.Chunks.decode(stream)
+    phys   = Enum.find(chunks, fn (%{type: t}) -> t == "pHYs" end)
+
+    assert 2835 == phys.payload.x
+    assert 2835 == phys.payload.y
+    assert :m == phys.payload.unit
+  end
 end
