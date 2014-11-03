@@ -28,4 +28,12 @@ defmodule ExPNG.LoadTest do
     assert String.ends_with?(itxt.payload.text, "</x:xmpmeta>\n")
   end
 
+  test "loads sRGB chunks" do
+    stream = File.read!(Fixtures.path("test_8x8.png"))
+    chunks = ExPNG.Chunks.decode(stream)
+    srgb   = Enum.find(chunks, fn (%{type: t}) -> t == "sRGB" end)
+
+    assert :perceptual == srgb.payload.rendering_intent
+  end
+
 end

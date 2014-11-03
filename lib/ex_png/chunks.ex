@@ -38,6 +38,10 @@ defmodule ExPNG.Chunks do
     defstruct keyword: nil, language_tag: nil, translated_keyword: nil, text: nil
   end
 
+  defmodule StandardRGB do
+    defstruct rendering_intent: nil
+  end
+
   #
   # Public API
   #
@@ -156,6 +160,17 @@ defmodule ExPNG.Chunks do
     }
 
     %Chunk{chunk | payload: payload}
+  end
+
+  defp decode_chunk(%Chunk{type: "sRGB"} = chunk, <<rendering_intent_value :: unsigned-8>>, _) do
+    rendering_intent = case rendering_intent_value do
+      0    -> :perceptual
+      1    -> :relative_colorimetric
+      2    -> :saturation
+      3    -> :absolute_colorimetric
+      true -> :unknown_rendering_intent
+    end
+    %Chunk{chunk | payload: %StandardRGB{rendering_intent: rendering_intent}}
   end
 
   defp decode_chunk(chunk, _, _), do: %Chunk{chunk | payload: :unsupported}
