@@ -1,6 +1,6 @@
 defmodule ExPNG.Decoding do
 
-  import ExPNG.Utils, only: [inflate: 1, crc32: 2]
+  import ExPNG.Utils, only: [inflate: 1, crc32: 2, null_terminated: 1]
 
   alias ExPNG.Chunks, as: Chunks
 
@@ -152,10 +152,5 @@ defmodule ExPNG.Decoding do
 
   # Fallback
   defp decode_chunk(chunk, _, _), do: %Chunks.Chunk{chunk | payload: :unsupported}
-
-  defp null_terminated(string), do: _null_terminated(string, <<>>)
-  defp _null_terminated(<<>>, match), do: {match, <<>>}
-  defp _null_terminated(<<0, string :: binary>>, match), do: {match, string}
-  defp _null_terminated(<<c, string :: binary>>, match), do: _null_terminated(string, match <> <<c>>)
 
 end

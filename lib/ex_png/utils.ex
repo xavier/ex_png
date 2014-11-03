@@ -20,4 +20,26 @@ defmodule ExPNG.Utils do
     :erlang.list_to_binary(compressed)
   end
 
+  @doc """
+
+    Extracts a null-terminated string from the given binary, returns
+
+    iex> {match, string} = ExPNG.Utils.null_terminated("ABC\0DEF\0\0XYZ")
+    {"ABC", "DEF\0\0XYZ"}
+    iex> {match, string} = ExPNG.Utils.null_terminated(string)
+    {"DEF", "\0XYZ"}
+    iex> {match, string} = ExPNG.Utils.null_terminated(string)
+    {"", "XYZ"}
+    iex> {match, string} = ExPNG.Utils.null_terminated(string)
+    {"XYZ", ""}
+    iex> {match, string} = ExPNG.Utils.null_terminated(string)
+    {"", ""}
+
+  """
+
+  def null_terminated(string), do: _null_terminated(string, <<>>)
+  def _null_terminated(<<>>, match), do: {match, <<>>}
+  def _null_terminated(<<0, string :: binary>>, match), do: {match, string}
+  def _null_terminated(<<c, string :: binary>>, match), do: _null_terminated(string, match <> <<c>>)
+
 end
