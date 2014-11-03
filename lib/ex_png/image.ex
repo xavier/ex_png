@@ -51,7 +51,7 @@ defmodule ExPNG.Image do
     }
   end
 
-  def size(%Image{width: w, height: h} = image) do
+  def size(%Image{width: w, height: h}) do
     {w, h}
   end
 
