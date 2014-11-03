@@ -34,6 +34,10 @@ defmodule ExPNG.Chunks do
     defstruct width: nil, height: nil, bit_depth: nil, color_type: nil, compression_method: nil, filter_method: nil, interlace_method: nil
   end
 
+  defmodule Text do
+    defstruct keyword: nil, text: nil
+  end
+
   defmodule InternationalText do
     defstruct keyword: nil, language_tag: nil, translated_keyword: nil, text: nil
   end
@@ -138,6 +142,11 @@ defmodule ExPNG.Chunks do
 
   defp decode_chunk(%Chunk{type: "IDAT"} = chunk, data, %Header{compression_method: 0}) do
     %Chunk{chunk | payload: inflate(data)}
+  end
+
+  defp decode_chunk(%Chunk{type: "tEXt"} = chunk, data, _) do
+    {keyword, text} = null_terminated(data)
+    %Chunk{chunk | payload: %Text{keyword: keyword, text: text}}
   end
 
   defp decode_chunk(%Chunk{type: "iTXt"} = chunk, data, _) do

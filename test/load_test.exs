@@ -28,6 +28,20 @@ defmodule ExPNG.LoadTest do
     assert String.ends_with?(itxt.payload.text, "</x:xmpmeta>\n")
   end
 
+  test "loads tEXt chunks" do
+    stream = File.read!(Fixtures.path("textual_data.png"))
+    chunks = ExPNG.Chunks.decode(stream)
+    tEXts  = Enum.filter(chunks, fn (%{type: t}) -> t == "tEXt" end)
+
+    assert 6 == Enum.count(tEXts)
+
+    [tEXt|_] = tEXts
+
+    assert "Title"    == tEXt.payload.keyword
+    assert "PngSuite" == tEXt.payload.text
+
+  end
+
   test "loads sRGB chunks" do
     stream = File.read!(Fixtures.path("test_8x8.png"))
     chunks = ExPNG.Chunks.decode(stream)
