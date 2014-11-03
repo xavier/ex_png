@@ -66,7 +66,7 @@ defmodule ExPNG.Chunks do
     combine_image_data(chunks)
   end
 
-  @doc "Combines multiple image data chunk payloads into a single binary"
+  # "Combines multiple image data chunk payloads into a single binary"
   defp combine_image_data(chunks), do: _combine_image_data(chunks, <<>>)
   defp _combine_image_data([%Chunk{type: "IDAT", payload: payload}|chunks], binary), do: _combine_image_data(chunks, binary <> payload)
   defp _combine_image_data([_|chunks], binary), do: _combine_image_data(chunks, binary)

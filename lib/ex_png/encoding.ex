@@ -15,14 +15,16 @@ defmodule ExPNG.Encoding do
     encode_chunks([header|slice_image_data(image_data)], @signature)
   end
 
-  @doc "Slices image data larger that the maximum chunk size"
+  # "Slices image data larger that the maximum chunk size"
   defp slice_image_data(image_data), do: _slice_image_data(image_data, [])
   defp _slice_image_data(<<chunk_data::binary-size(@maximum_chunk_size), image_data::binary>>, chunks), do: _slice_image_data(image_data, [chunk_data|chunks])
   defp _slice_image_data(<<image_data::binary>>, chunks), do: Enum.reverse([image_data|chunks])
 
+  # Encodes a list of chunks into a binary stream
   defp encode_chunks([], stream), do: stream <> wrap_chunk(encode_chunk_payload(:end))
   defp encode_chunks([payload|payloads], stream), do: encode_chunks(payloads, stream <> wrap_chunk(encode_chunk_payload(payload)))
 
+  # Wrap the given data into the PNG binary chunk format
   defp wrap_chunk({type, data}) do
     <<
       byte_size(data) :: unsigned-32,
@@ -32,6 +34,7 @@ defmodule ExPNG.Encoding do
     >>
   end
 
+  # Header chunk encoder
   defp encode_chunk_payload(%Chunks.Header{width: _} = header) do
     payload = <<
       header.width :: unsigned-32,
@@ -45,10 +48,12 @@ defmodule ExPNG.Encoding do
     {"IHDR", payload}
   end
 
+  # Image data chunk encoder
   defp encode_chunk_payload(<<image_data :: binary>>) do
     {"IDAT", deflate(image_data)}
   end
 
+  # Terminal chunk encoder
   defp encode_chunk_payload(:end), do: {"IEND", <<>>}
 
 end

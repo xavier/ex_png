@@ -40,6 +40,7 @@ defmodule ExPNG.Decoding do
     _decode_chunks(stream, header, [decode_chunk(chunk, data, header)|chunks])
   end
 
+  # Extracts common chunk information and the still unprocessed CRC-checked payload
   defp unwrap_chunk(length, stream) do
     <<type::binary-size(4), payload::binary-size(length), crc::unsigned-32, stream::binary>> = stream
     chunk = %Chunks.Chunk{type: type, length: length}
@@ -47,6 +48,9 @@ defmodule ExPNG.Decoding do
     {chunk, payload, stream}
   end
 
+  # Header chunk decoder
+  # Prevent this function from being called we already encountered a header chunk
+  # in the case of a malformed or malicious file
   defp decode_chunk(%Chunks.Chunk{type: "IHDR"} = chunk, data, nil) do
     <<
       width::unsigned-32,
@@ -69,19 +73,24 @@ defmodule ExPNG.Decoding do
     %Chunks.Chunk{chunk | payload: payload}
   end
 
+  # Terminal chunk decoder
   defp decode_chunk(%Chunks.Chunk{type: "IEND"} = chunk, _, _) do
     %Chunks.Chunk{chunk | payload: nil}
   end
 
+  # Image data chunk decoder
+  # Will only match if the compression algorithm is supported
   defp decode_chunk(%Chunks.Chunk{type: "IDAT"} = chunk, data, %Chunks.Header{compression_method: 0}) do
     %Chunks.Chunk{chunk | payload: inflate(data)}
   end
 
+  # Uncompressed text chunk decoder
   defp decode_chunk(%Chunks.Chunk{type: "tEXt"} = chunk, data, _) do
     {keyword, text} = null_terminated(data)
     %Chunks.Chunk{chunk | payload: %Chunks.Text{keyword: keyword, text: text}}
   end
 
+  # Compressed text chunk decoder
   defp decode_chunk(%Chunks.Chunk{type: "zTXt"} = chunk, data, _) do
     {keyword, data} = null_terminated(data)
     text = case data do
@@ -93,6 +102,7 @@ defmodule ExPNG.Decoding do
     %Chunks.Chunk{chunk | payload: %Chunks.Text{keyword: keyword, text: text}}
   end
 
+  # International text chunk decoder
   defp decode_chunk(%Chunks.Chunk{type: "iTXt"} = chunk, data, _) do
     {keyword, data} = null_terminated(data)
     <<compression::binary-size(2), data :: binary>> = data
@@ -118,6 +128,7 @@ defmodule ExPNG.Decoding do
     %Chunks.Chunk{chunk | payload: payload}
   end
 
+  # Standard RGB chunk decoder
   defp decode_chunk(%Chunks.Chunk{type: "sRGB"} = chunk, <<rendering_intent_value :: unsigned-8>>, _) do
     rendering_intent = case rendering_intent_value do
       0 -> :perceptual
@@ -129,6 +140,7 @@ defmodule ExPNG.Decoding do
     %Chunks.Chunk{chunk | payload: %Chunks.StandardRGB{rendering_intent: rendering_intent}}
   end
 
+  # Physical Dimensions chunk decoder
   defp decode_chunk(%Chunks.Chunk{type: "pHYs"} = chunk, data, _) do
     <<x :: unsigned-32, y :: unsigned-32, unit_specifier :: unsigned-8>> = data
     unit = case unit_specifier do
@@ -138,6 +150,7 @@ defmodule ExPNG.Decoding do
     %Chunks.Chunk{chunk | payload: %Chunks.PhysicalPixelDimensions{x: x, y: y, unit: unit}}
   end
 
+  # Fallback
   defp decode_chunk(chunk, _, _), do: %Chunks.Chunk{chunk | payload: :unsupported}
 
   defp null_terminated(string), do: _null_terminated(string, <<>>)
