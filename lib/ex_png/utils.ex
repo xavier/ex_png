@@ -37,9 +37,10 @@ defmodule ExPNG.Utils do
 
   """
 
-  def null_terminated(string), do: _null_terminated(string, <<>>)
-  def _null_terminated(<<>>, match), do: {match, <<>>}
-  def _null_terminated(<<0, string :: binary>>, match), do: {match, string}
-  def _null_terminated(<<c, string :: binary>>, match), do: _null_terminated(string, match <> <<c>>)
+  def null_terminated(string), do: null_terminated(string, <<>>)
+
+  defp null_terminated(<<>>, match), do: {match, <<>>}
+  defp null_terminated(<<0, string :: binary>>, match), do: {match, string}
+  defp null_terminated(<<c, string :: binary>>, match), do: null_terminated(string, match <> <<c>>)
 
 end
