@@ -1,6 +1,6 @@
 defmodule ExPNG.Decoding do
 
-  import ExPNG.Utils, only: [inflate: 1, deflate: 1, crc32: 2]
+  import ExPNG.Utils, only: [inflate: 1, crc32: 2]
 
   alias ExPNG.Chunks, as: Chunks
 
@@ -103,7 +103,7 @@ defmodule ExPNG.Decoding do
       <<0, 0>>
         -> data
       <<1, 0>>
-        -> deflate(data)
+        -> inflate(data)
       _
         -> :unsupported_compression
     end
