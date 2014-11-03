@@ -20,8 +20,6 @@ defmodule ExPNG.Chunks do
   # None 0
   # Adam7 1
 
-  import ExPNG.Utils, only: [deflate: 1, crc32: 2]
-
   defmodule Chunk do
     defstruct type: nil, length: nil, payload: nil, crc: nil
   end
