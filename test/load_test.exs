@@ -18,4 +18,14 @@ defmodule ExPNG.LoadTest do
     assert {256, 256} == Image.size(png)
   end
 
+  test "loads iTXt chunks" do
+    stream = File.read!(Fixtures.path("test_8x8.png"))
+    chunks = ExPNG.Chunks.decode(stream)
+    itxt   = Enum.find(chunks, fn (%{type: t}) -> t == "iTXt" end)
+
+    assert "XML:com.adobe.xmp" == itxt.payload.keyword
+    assert String.starts_with?(itxt.payload.text, "<x:xmpmeta")
+    assert String.ends_with?(itxt.payload.text, "</x:xmpmeta>\n")
+  end
+
 end

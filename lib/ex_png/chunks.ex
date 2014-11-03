@@ -34,6 +34,10 @@ defmodule ExPNG.Chunks do
     defstruct width: nil, height: nil, bit_depth: nil, color_type: nil, compression_method: nil, filter_method: nil, interlace_method: nil
   end
 
+  defmodule InternationalText do
+    defstruct keyword: nil, language_tag: nil, translated_keyword: nil, text: nil
+  end
+
   #
   # Public API
   #
@@ -102,7 +106,7 @@ defmodule ExPNG.Chunks do
     {chunk, payload, stream}
   end
 
-  def decode_chunk(%Chunk{type: "IHDR"} = chunk, data, nil) do
+  defp decode_chunk(%Chunk{type: "IHDR"} = chunk, data, nil) do
     <<
       width::unsigned-32,
       height::unsigned-32,
@@ -124,15 +128,42 @@ defmodule ExPNG.Chunks do
     %Chunk{chunk | payload: payload}
   end
 
-  def decode_chunk(%Chunk{type: "IEND"} = chunk, _, _) do
+  defp decode_chunk(%Chunk{type: "IEND"} = chunk, _, _) do
     %Chunk{chunk | payload: nil}
   end
 
-  def decode_chunk(%Chunk{type: "IDAT"} = chunk, data, %Header{compression_method: 0}) do
+  defp decode_chunk(%Chunk{type: "IDAT"} = chunk, data, %Header{compression_method: 0}) do
     %Chunk{chunk | payload: inflate(data)}
   end
 
-  def decode_chunk(chunk, _, _), do: %Chunk{chunk | payload: :unsupported}
+  defp decode_chunk(%Chunk{type: "iTXt"} = chunk, data, _) do
+    {keyword, data} = null_terminated(data)
+    <<compression::binary-size(2), data :: binary>> = data
+    {language_tag, data} = null_terminated(data)
+    {translated_keyword, data} = null_terminated(data)
+
+    text = case compression do
+      <<0, 0>> -> data
+      <<1, 0>> -> deflate(data)
+      true     -> :unsupported_compression
+    end
+
+    payload = %InternationalText{
+      keyword: keyword,
+      language_tag: language_tag,
+      translated_keyword: translated_keyword,
+      text: text
+    }
+
+    %Chunk{chunk | payload: payload}
+  end
+
+  defp decode_chunk(chunk, _, _), do: %Chunk{chunk | payload: :unsupported}
+
+  defp null_terminated(string), do: _null_terminated(string, <<>>)
+  defp _null_terminated(<<>>, match), do: {match, <<>>}
+  defp _null_terminated(<<0, string :: binary>>, match), do: {match, string}
+  defp _null_terminated(<<c, string :: binary>>, match), do: _null_terminated(string, match <> <<c>>)
 
   #
   # Encoder
