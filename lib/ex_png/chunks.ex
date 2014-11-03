@@ -158,7 +158,7 @@ defmodule ExPNG.Chunks do
     text = case data do
       <<0, compressed :: binary>>
         -> inflate(compressed)
-      true
+      _
         -> :unsupported_compression
     end
     %Chunk{chunk | payload: %Text{keyword: keyword, text: text}}
@@ -171,9 +171,12 @@ defmodule ExPNG.Chunks do
     {translated_keyword, data} = null_terminated(data)
 
     text = case compression do
-      <<0, 0>> -> data
-      <<1, 0>> -> deflate(data)
-      true     -> :unsupported_compression
+      <<0, 0>>
+        -> data
+      <<1, 0>>
+        -> deflate(data)
+      _
+        -> :unsupported_compression
     end
 
     payload = %InternationalText{
@@ -188,11 +191,11 @@ defmodule ExPNG.Chunks do
 
   defp decode_chunk(%Chunk{type: "sRGB"} = chunk, <<rendering_intent_value :: unsigned-8>>, _) do
     rendering_intent = case rendering_intent_value do
-      0    -> :perceptual
-      1    -> :relative_colorimetric
-      2    -> :saturation
-      3    -> :absolute_colorimetric
-      true -> :unknown_rendering_intent
+      0 -> :perceptual
+      1 -> :relative_colorimetric
+      2 -> :saturation
+      3 -> :absolute_colorimetric
+      _ -> :unknown_rendering_intent
     end
     %Chunk{chunk | payload: %StandardRGB{rendering_intent: rendering_intent}}
   end
@@ -200,8 +203,8 @@ defmodule ExPNG.Chunks do
   defp decode_chunk(%Chunk{type: "pHYs"} = chunk, data, _) do
     <<x :: unsigned-32, y :: unsigned-32, unit_specifier :: unsigned-8>> = data
     unit = case unit_specifier do
-      1    -> :m
-      true -> :unsupported_unit
+      1 -> :m
+      _ -> :unsupported_unit
     end
     %Chunk{chunk | payload: %PhysicalPixelDimensions{x: x, y: y, unit: unit}}
   end
