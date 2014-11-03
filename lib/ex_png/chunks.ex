@@ -149,6 +149,17 @@ defmodule ExPNG.Chunks do
     %Chunk{chunk | payload: %Text{keyword: keyword, text: text}}
   end
 
+  defp decode_chunk(%Chunk{type: "zTXt"} = chunk, data, _) do
+    {keyword, data} = null_terminated(data)
+    text = case data do
+      <<0, compressed :: binary>>
+        -> inflate(compressed)
+      true
+        -> :unsupported_compression
+    end
+    %Chunk{chunk | payload: %Text{keyword: keyword, text: text}}
+  end
+
   defp decode_chunk(%Chunk{type: "iTXt"} = chunk, data, _) do
     {keyword, data} = null_terminated(data)
     <<compression::binary-size(2), data :: binary>> = data

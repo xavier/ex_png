@@ -42,6 +42,19 @@ defmodule ExPNG.LoadTest do
 
   end
 
+  test "loads zTXt chunks" do
+    stream = File.read!(Fixtures.path("compressed_textual_data.png"))
+    chunks = ExPNG.Chunks.decode(stream)
+    zTXts  = Enum.filter(chunks, fn (%{type: t}) -> t == "zTXt" end)
+
+    assert 4 == Enum.count(zTXts)
+
+    [zTXt|_] = zTXts
+
+    assert "Copyright" == zTXt.payload.keyword
+    assert "Copyright Willem van Schaik, Singapore 1995-96" == zTXt.payload.text
+  end
+
   test "loads sRGB chunks" do
     stream = File.read!(Fixtures.path("test_8x8.png"))
     chunks = ExPNG.Chunks.decode(stream)
