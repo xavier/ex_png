@@ -27,7 +27,7 @@ defmodule ExPNG.Chunks do
   @maximum_chunk_size 0x7fffffff
 
   defmodule Chunk do
-    defstruct type: nil, length: nil, data: nil, payload: nil, crc: nil
+    defstruct type: nil, length: nil, payload: nil, crc: nil
   end
 
   defmodule Header do
@@ -66,8 +66,8 @@ defmodule ExPNG.Chunks do
   defp verify_signature(<<137, 80, 78, 71, 13, 10, 26, 10, stream::binary>>), do: {:ok, stream}
   defp verify_signature(stream), do: {:error, stream}
 
-  defp crc_check(%Chunk{crc: crc} = chunk) do
-    case crc32(chunk.type, chunk.data) do
+  defp crc_check(type, data, crc) do
+    case crc32(type, data) do
       ^crc -> :ok
       _ -> nil
     end
@@ -79,16 +79,30 @@ defmodule ExPNG.Chunks do
   defp _combine_image_data([_|chunks], binary), do: _combine_image_data(chunks, binary)
   defp _combine_image_data([], binary), do: binary
 
-  defp decode_chunks(stream), do: _decode_chunks(stream, [])
-  defp _decode_chunks(<<>>, chunks), do: Enum.reverse(chunks)
-  defp _decode_chunks(<<length::unsigned-32, type::binary-size(4), stream::binary>>, chunks) do
-    <<payload::binary-size(length), crc::unsigned-32, stream::binary>> = stream
-    chunk = %Chunk{type: type, length: length, data: payload, crc: crc}
-    :ok = crc_check(chunk)
-    _decode_chunks(stream, [decode_chunk(chunk)|chunks])
+  defp decode_chunks(stream), do: _decode_chunks(stream, nil, [])
+  defp _decode_chunks(<<>>, _, chunks), do: Enum.reverse(chunks)
+
+  # First chunk, we expect the header
+  defp _decode_chunks(<<length::unsigned-32, stream::binary>>, nil, chunks) do
+    {%Chunk{type: "IHDR"} = chunk, data, stream} = unwrap_chunk(length, stream)
+    header_chunk = decode_chunk(chunk, data, nil)
+    _decode_chunks(stream, header_chunk.payload, [header_chunk|chunks])
   end
 
-  def decode_chunk(%Chunk{type: "IHDR", data: data} = chunk) do
+  # Subsequent chunks, we have the header
+  defp _decode_chunks(<<length::unsigned-32, stream::binary>>, header, chunks) when header != nil do
+    {chunk, data, stream} = unwrap_chunk(length, stream)
+    _decode_chunks(stream, header, [decode_chunk(chunk, data, header)|chunks])
+  end
+
+  defp unwrap_chunk(length, stream) do
+    <<type::binary-size(4), payload::binary-size(length), crc::unsigned-32, stream::binary>> = stream
+    chunk = %Chunk{type: type, length: length}
+    :ok = crc_check(type, payload, crc)
+    {chunk, payload, stream}
+  end
+
+  def decode_chunk(%Chunk{type: "IHDR"} = chunk, data, nil) do
     <<
       width::unsigned-32,
       height::unsigned-32,
@@ -110,15 +124,15 @@ defmodule ExPNG.Chunks do
     %Chunk{chunk | payload: payload}
   end
 
-  def decode_chunk(%Chunk{type: "IEND"} = chunk) do
+  def decode_chunk(%Chunk{type: "IEND"} = chunk, _, _) do
     %Chunk{chunk | payload: nil}
   end
 
-  def decode_chunk(%Chunk{type: "IDAT", data: data} = chunk) do
+  def decode_chunk(%Chunk{type: "IDAT"} = chunk, data, %Header{compression_method: 0}) do
     %Chunk{chunk | payload: inflate(data)}
   end
 
-  def decode_chunk(chunk), do: %Chunk{chunk | payload: :unsupported}
+  def decode_chunk(chunk, _, _), do: %Chunk{chunk | payload: :unsupported}
 
   #
   # Encoder
