@@ -12,7 +12,7 @@ require ExPNG.Color, as: Color
 png = ExPNG.read("/path/to/image.png")
 
 # => {width, height}
-IO.inspect Image.size(png.size)
+IO.inspect Image.size(png)
 
 # Draw some pixels on a transparent canvas and write PNG
 ExPNG.image(200, 300)
