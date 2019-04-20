@@ -24,15 +24,15 @@ defmodule ExPNG.Utils do
 
     Extracts a null-terminated string from the given binary, returns
 
-    iex> {match, string} = ExPNG.Utils.null_terminated("ABC\0DEF\0\0XYZ")
+    iex> {_match, string} = ExPNG.Utils.null_terminated("ABC\0DEF\0\0XYZ")
     {"ABC", "DEF\0\0XYZ"}
-    iex> {match, string} = ExPNG.Utils.null_terminated(string)
+    iex> {_match, string} = ExPNG.Utils.null_terminated(string)
     {"DEF", "\0XYZ"}
-    iex> {match, string} = ExPNG.Utils.null_terminated(string)
+    iex> {_match, string} = ExPNG.Utils.null_terminated(string)
     {"", "XYZ"}
-    iex> {match, string} = ExPNG.Utils.null_terminated(string)
+    iex> {_match, string} = ExPNG.Utils.null_terminated(string)
     {"XYZ", ""}
-    iex> {match, string} = ExPNG.Utils.null_terminated(string)
+    iex> {_match, _string} = ExPNG.Utils.null_terminated(string)
     {"", ""}
 
   """

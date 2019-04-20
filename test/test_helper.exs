@@ -26,7 +26,7 @@ defmodule StagingArea do
 
   def delete_files do
     unless @keep_files do
-      list_files |> Enum.each(&File.rm/1)
+      list_files() |> Enum.each(&File.rm/1)
     end
   end
 
